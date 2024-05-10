@@ -1,113 +1,227 @@
-import Image from "next/image";
+// @ts-ignore
+'use client'
+import React, { useState,useEffect }from 'react';
+import axios from 'axios';
 
-export default function Home() {
+let longUrlInput: HTMLInputElement | null = null;
+const YourComponent = () => {
+  console.log("YourComponent rendered")
+  const [shortenedUrl, setShortenedUrl] = React.useState('');
+  const [deletionMessage, setDeletionMessage] = useState('');
+  const [inputValue, setInputValue] = useState('');
+
+  const handleInputRef = (input: HTMLInputElement | null) => {
+    console.log("Input recieved")
+    longUrlInput = input;
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    console.log("handleSubmit entered")
+    e.preventDefault();
+    try {
+      console.log("Entered try")
+      console.log(longUrlInput);
+      if (longUrlInput && longUrlInput.value) {
+        const response = await axios.post('http://localhost:8000/shorten_url/', { url: longUrlInput.value }, {maxRedirects: 10});
+        console.log(response.data);
+        setShortenedUrl(response.data.detail.shortened_url);
+        forceUpdate(); // Update the component to reflect the changes
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+
+  const handleDelete = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    try {
+      const response = await axios.delete('http://localhost:8000/delete_url/', {data: {url: inputValue}});
+      setDeletionMessage(response.data.message);
+      forceUpdate();
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+
+  const RedirectComponent = () => {
+    useEffect(() => {
+      const fetchRedirect = async () => {
+        // Get the shortened URL from the browser's address bar
+        const shortenedUrl = window.location.href;
+        try {
+          // Make a request to the backend to fetch the original URL
+          const response = await axios.get(`http://localhost:8000/redirect/?url=${encodeURIComponent(shortenedUrl)}`);
+          const originalUrl = response.data.original_url;
+          // Redirect the user to the original URL
+          window.location.href = originalUrl;
+        } catch (error) {
+          console.error('Error:', error);
+          // Handle error (e.g., display an error message)
+        }
+      };
+  
+      fetchRedirect();
+    }, []); // Empty dependency array ensures that this effect runs only once when the component mounts
+    return (
+      <div>
+        
+      </div>
+    )
+  };
+  
+
+  const forceUpdate = () => {
+    setUpdate({});
+  }
+
+  const [update, setUpdate] = React.useState({});
+
+  {console.log("html")}
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:size-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+    <main className="flex min-h-screen flex-col items-center justify-between p-24 bg-gradient-to-r from-gray-300 via-gray-400 to-gray-500">
+      <h1 className="font-serif text-5xl">URL Shortener</h1>
+      <div className="flex flex-col items-center justify-center space-y-4">
+        <div className="flex flex-row items-center justify-center space-x-4">
+          <form onSubmit={handleSubmit}>
+            <input type="text" placeholder="Enter the URL" ref={handleInputRef} className="w-80 p-3 rounded-lg border border-black focus:outline-none focus:border-black bg-gray-700 text-gray-300" />
+            <button type="submit" className=" font-serif w-20 p-3 rounded-lg border border-gray-400 bg-gray-400 text-gray-950 ml-4 md-1">Submit</button>
+          </form>
+        </div>
+        <div className="flex flex-col items-center justify-center">
+          {shortenedUrl && <p className="text-gray-900">Shortened URL: {shortenedUrl}</p>}
         </div>
       </div>
-
-      <div className="relative z-[-1] flex place-items-center before:absolute before:h-[300px] before:w-full before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 sm:before:w-[480px] sm:after:w-[240px] before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
+      <div className="flex flex-col items-enter justify-center">
+        <div className="flex flex-row items-center justify-center">
+          <form onSubmit={handleDelete}>
+            <input type="text" placeholder="Enter the URL" value={inputValue} onChange={(e) => setInputValue(e.target.value)} className="w-80 p-3 rounded-lg border border-black focus:outline-none focus:border-black bg-gray-700 text-gray-300" />
+            <button type="submit" className="font-serif w-20 p-3 rounded-lg border border-gray-400 bg-gray-400 text-gray-950 ml-4 md-1">Delete</button>
+          </form>
+        </div>
+        <div className="flex flex-row items-center justify-center">
+          {deletionMessage && <p className="font-serif text-gray-900">Message: {deletionMessage}</p>}
+        </div>
       </div>
-
-      <div className="mb-32 grid text-center lg:mb-0 lg:w-full lg:max-w-5xl lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-balance text-sm opacity-50">
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
+      <div>
+        <RedirectComponent/>
       </div>
     </main>
   );
-}
+};
+
+
+export default YourComponent;
+
+
+// const [message, setDeletionMessage] = React.useState('');
+// const handledelete = async (e: React.FormEvent<HTMLFormElement>) => {
+  //   e.preventDefault();
+  //   try {
+  //     console.log(longUrlInput)
+  //     if (longUrlInput && longUrlInput.value) {
+  //       const response = await axios.delete('http://localhost:8000/delete_url/', {url: longUrlInput.value});
+  //       setDeletionMessage(response.data.message);
+  //       forceUpdate();
+  //     }
+  //   } catch (error) {
+  //     console.error('Error: ', error);
+  //   }
+  // };
+  {/* <div className="flex flex-col items-enter justify-center">
+        <div className="flex flex-row items-center justify-center">
+          <form onSubmit={handledelete}>
+            <input type="text" placeholder="Enter the URL" ref={handleInputRef} className="w-80 p-3 rounded-lg border border-black focus:outline-none focus:border-black bg-gray-700 text-gray-300" />
+            <button type="submit" className="font-serif w-20 p-3 rounded-lg border border-gray-400 bg-gray-400 text-gray-950 ml-4 md-1">Delete</button>
+          </form>
+        </div>
+        <div className="flex flex-row items-center justify-center">
+          {message && <p className="font-serif text-gray-900">Message: {message}</p>}
+        </div>
+      </div> */}
+
+
+
+// // @ts-ignore
+// // @useClient
+// import React from 'react';
+// import axios from 'axios';
+// let longUrlInput: HTMLInputElement | null = null;
+// let updateKey = 0;
+
+// const YourComponent = () => {
+//   let shortenedUrl = '';
+
+//   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+//     e.preventDefault();
+//     try {
+//       if (longUrlInput && longUrlInput.value)
+//         {
+//           const response = await axios.post('http://localhost:8000/shorten_url/', { url: longUrlInput.value });
+//             shortenedUrl = response.data.shortened_url;
+//             forceUpdate(); // Update the component to reflect the changes
+//             updateKey++;
+//         }
+//     }
+//     catch (error) {
+//       console.error('Error:', error);
+//     }
+//   };
+
+//   const forceUpdate = () => {
+//     setUpdate({});
+//   }
+
+//   const [update, setUpdate] = React.useState({});
+
+//   return (
+//     <main className="flex min-h-screen flex-col items-center justify-between p-24 bg-gradient-to-r from-gray-300 via-gray-400 to-gray-500">
+//     <h1 className="font-serif text-5xl">URL Shortener</h1>
+//       <div className="flex flex-row items-center justify-center">
+//         <form onSubmit={handleSubmit}>
+//           {/* @ts-ignore */}
+//           <input type="text" placeholder="Enter the URL" ref={(input) => longUrlInput = input} className="w-80 p-3 rounded-lg border border-black focus:outline-none focus:border-black bg-gray-700 text-gray-300"></input>
+//           <button type="submit" className=" font-serif w-20 p-3 rounded-lg border border-gray-400 bg-gray-400 text-gray-950 ml-4">Submit</button>
+//         </form>
+//         {shortenedUrl && <p>Shortened URL: {shortenedUrl}</p>}
+//       </div>
+//     </main>
+//   );
+// };
+
+// export default YourComponent;
+
+
+// export default function Home() {
+//   const [inputURL, setInputURL] = useState('');
+//   const [shortenedURL, setShortenedURL] = useState('');
+//   const [error, setError] = useState<string | null>(null);
+
+//   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+//     e.preventDefault();
+//     try {
+//       const data = await shortenURL(inputURL);
+//       setShortenedURL(data.shortened_url);
+//       setError(null);
+//     } catch (err:any) {
+//       setError(err.response?.data.detail || 'An error occured');
+//     }
+//   };
+
+//   return (
+//     <main className="flex min-h-screen flex-col items-center justify-between p-24 bg-gradient-to-r from-gray-300 via-gray-400 to-gray-500">
+//     <h1 className="font-serif text-5xl">URL Shortener</h1>
+//       <div className="flex flex-row items-center justify-center">
+//         <form onSubmit={handleSubmit}>
+//           <input type="text" placeholder="Enter the URL" value={inputURL} onChange={(e) => setInputURL(e.target.value)} className="w-80 p-3 rounded-lg border border-black focus:outline-none focus:border-black bg-gray-700 text-gray-300"></input>
+//           <button type="submit" className=" font-serif w-20 p-3 rounded-lg border border-gray-400 bg-gray-400 text-gray-950 ml-4">Submit</button>
+//         </form>
+//         {shortenedURL && <p>Shortened URL: {shortenedURL}</p>}
+//         {error && <p>Error: {error}</p>}
+//       </div>
+
+//       {/* <div className="flex flex-col items-center justify-center">
+//         <input type="text" className="font-serif w-80 p-3 rounded-lg border border-black focus:outline-none focus:border-black bg-gray-700 text-gray-300" readOnly placeholder="Shortened URL" style={{ marginTop: "-15rem" }}></input>
+//       </div> */}
+//     </main>
+//   );
+// }
