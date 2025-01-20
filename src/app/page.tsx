@@ -22,7 +22,7 @@ const YourComponent = () => {
       console.log("Entered try")
       console.log(longUrlInput);
       if (longUrlInput && longUrlInput.value) {
-        const response = await axios.post('BACKEND_URL/shorten_url/', { url: longUrlInput.value }, {maxRedirects: 10});
+        const response = await axios.post(`${process.env.BACKEND_URL}/shorten_url/`, { url: longUrlInput.value }, {maxRedirects: 10});
         console.log(response.data);
         setShortenedUrl(response.data.detail.shortened_url);
         forceUpdate(); 
@@ -35,7 +35,7 @@ const YourComponent = () => {
   const handleDelete = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      const response = await axios.delete('BACKEND_URL/delete_url/', {data: {url: inputValue}});
+      const response = await axios.delete(`${process.env.BACKEND_URL}/delete_url/`, {data: {url: inputValue}});
       setDeletionMessage(response.data.message);
       forceUpdate();
     } catch (error) {
@@ -50,7 +50,7 @@ const YourComponent = () => {
         const shortenedUrl = window.location.href;
         try {
           // Make a request to the backend to fetch the original URL
-          const response = await axios.get(`BACKEND_URL/redirect/?url=${encodeURIComponent(shortenedUrl)}`);
+          const response = await axios.get(`${process.env.BACKEND_URL}/redirect/?url=${encodeURIComponent(shortenedUrl)}`);
           const originalUrl = response.data.original_url;
           // Redirect the user to the original URL
           window.location.href = originalUrl;
