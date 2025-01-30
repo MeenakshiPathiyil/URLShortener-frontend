@@ -20,7 +20,7 @@ const YourComponent = () => {
     e.preventDefault();
     try {
       if (longUrlInput?.value) {
-        const response = await axios.post('/pages/api/proxy/shorten', { url: longUrlInput.value });
+        const response = await axios.post('/pages/api/proxy/shorten_url', { url: longUrlInput.value });
         setShortenedUrl(response.data.shortened_url);
       }
     } catch (error) {
