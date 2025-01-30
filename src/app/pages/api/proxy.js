@@ -12,13 +12,25 @@ export default async function handler(req, res) {
     try {
         let backendResponse;
 
-        if (req.method === 'GET') {
-            backendResponse = await fetch(`${backendUrl}${req.url}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            });
+        if (req.method === 'GET' && req.url.startsWith('/api/proxy/')) {
+            const shortHash = req.url.replace('/api/proxy/', ''); // Extract short hash
+    
+            try {
+                const backendResponse = await fetch(`${backendUrl}/${shortHash}/`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                });
+    
+                if (backendResponse.redirected) {
+                    return res.redirect(backendResponse.url); // Redirect if backend responds with 302
+                }
+    
+                const data = await backendResponse.json();
+                return res.status(backendResponse.status).json(data);
+            } catch (error) {
+                console.error("Proxy error:", error);
+                return res.status(500).json({ error: 'Internal Server Error' });
+            }
         }
 
         else if (req.method === 'POST') {

@@ -42,28 +42,26 @@ const YourComponent = () => {
   const RedirectComponent = () => {
     useEffect(() => {
       const fetchRedirect = async () => {
-        // Get the shortened URL from the browser's address bar
-        const shortenedUrl = window.location.href;
+        const pathname = window.location.pathname; 
+        const shortHash = pathname.substring(1); 
+  
+        if (!shortHash) return; 
+  
         try {
-          // Make a request to the backend to fetch the original URL
-          const response = await axios.get(`/pages/api/proxy/redirect/?url=${encodeURIComponent(shortenedUrl)}`);
+          const response = await axios.get(`/pages/api/proxy/${shortHash}/`);
           const originalUrl = response.data.original_url;
-          // Redirect the user to the original URL
-          window.location.href = originalUrl;
+          window.location.href = originalUrl; 
         } catch (error) {
-          console.error('Error:', error);
-          // Handle error 
+          console.error('Redirection Error:', error);
         }
       };
   
       fetchRedirect();
-    }, []); 
-    return (
-      <div>
-        
-      </div>
-    )
+    }, []);
+  
+    return null; 
   };
+  
   
 
   const forceUpdate = () => {
