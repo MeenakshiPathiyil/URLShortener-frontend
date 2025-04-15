@@ -20,7 +20,7 @@ const YourComponent = () => {
     e.preventDefault();
     try {
       if (longUrlInput?.value) {
-        const response = await axios.post('https://url-shortener-blue-ten.vercel.app/shorten_url', { url: longUrlInput.value });
+        const response = await axios.post('http://localhost:8000/shorten_url', { url: longUrlInput.value });
         setShortenedUrl(response.data.shortened_url);
       }
     } catch (error) {
@@ -31,7 +31,7 @@ const YourComponent = () => {
   const handleDelete = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      const response = await axios.delete(`https://url-shortener-blue-ten.vercel.app/delete_url/`, {data: {url: inputValue}});
+      const response = await axios.delete(`http://localhost:8000/delete_url/`, {data: {url: inputValue}});
       setDeletionMessage(response.data.message);
       forceUpdate();
     } catch (error) {
@@ -48,7 +48,7 @@ const YourComponent = () => {
         if (!shortHash) return; 
   
         try {
-          const response = await axios.get(`https://url-shortener-blue-ten.vercel.app/${shortHash}/`);
+          const response = await axios.get(`http://localhost:8000/${shortHash}/`);
           const originalUrl = response.data.original_url;
           window.location.href = originalUrl; 
         } catch (error) {
